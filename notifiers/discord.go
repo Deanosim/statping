@@ -28,8 +28,88 @@ var Discorder = &discord{&notifications.Notification{
 	AuthorUrl:   "https://github.com/hunterlong",
 	Delay:       time.Duration(5 * time.Second),
 	Icon:        "fab fa-discord",
-	SuccessData: null.NewNullString(`{"content": "Your service '{{.Service.Name}}' is currently back online and was down for {{.Service.Downtime.Human}}."}`),
-	FailureData: null.NewNullString(`{"content": "Your service '{{.Service.Name}}' is has been failing for {{.Service.Downtime.Human}}! Reason: {{.Failure.Issue}}"}`),
+	SuccessData: null.NewNullString(`{
+  "embeds": [
+    {
+      "title": "{{.Service.Name}} is back up",
+      "description": "Your service ['{{.Service.Name}}']({{.Service.Domain}}) is currently back online and was down for {{.Service.Downtime.Human}}.",
+      "url": "{{.Service.Domain}}",
+      "color": 8311585,
+      "footer": {
+        "icon_url": "https://avatars1.githubusercontent.com/u/61949049?s=200&v=4",
+        "text": "Statping Version {{.Core.Version}}"
+      },
+      "author": {
+      "name": "{{.Core.Name}}",
+      "url": "{{.Core.Domain}}",
+      "icon_url": "https://avatars1.githubusercontent.com/u/61949049?s=200&v=4"
+    },
+      "thumbnail": {
+        "url": "https://avatars1.githubusercontent.com/u/61949049?s=200&v=4"
+      },
+      "fields": [
+        {
+          "name": "Last Online",
+          "value": "{{.Service.LastOnline}}",
+          "inline": true
+        },
+        {
+          "name": "Last Offline",
+          "value": "{{.Service.LastOffline}}",
+          "inline": true
+        },
+        {
+          "name": "Failures 24 Hours",
+          "value": "{{.Service.FailuresLast24Hours}}",
+          "inline": true
+        }
+      ]
+    }
+  ]
+}`),
+	FailureData: null.NewNullString(`{
+  "embeds": [
+    {
+      "title": "Your service '{{.Service.Name}}' is failing",
+      "description": "Your service ['{{.Service.Name}}']({{.Service.Domain}}) is currently offline for {{.Service.Downtime.Human}}!",
+      "url": "{{.Service.Domain}}",
+      "color": 13632027,
+      "footer": {
+        "icon_url": "https://avatars1.githubusercontent.com/u/61949049?s=200&v=4",
+        "text": "Statping Version {{.Core.Version}}"
+      },
+      "author": {
+      "name": "{{.Core.Name}}",
+      "url": "{{.Core.Domain}}",
+      "icon_url": "https://avatars1.githubusercontent.com/u/61949049?s=200&v=4"
+    },
+      "thumbnail": {
+        "url": "https://avatars1.githubusercontent.com/u/61949049?s=200&v=4"
+      },
+      "fields": [
+        {
+          "name": "Downtime Start",
+          "value": "{{.Failure.DowntimeAgo}}"
+        },
+        {
+          "name": "Reason",
+          "value": "{{.Failure.Issue}}",
+          "inline": true
+        },
+        {
+          "name": "Ping",
+          "value": "{{.Failure.PingTime}}",
+          "inline": true
+        },
+        {
+          "name": "Failures 24 Hours",
+          "value": "{{.Service.FailuresLast24Hours}}",
+          "inline": true
+        }
+      ]
+    }
+  ]
+}`),
 	DataType:    "json",
 	Limits:      60,
 	Form: []notifications.NotificationForm{{
