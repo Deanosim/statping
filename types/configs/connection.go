@@ -20,6 +20,20 @@ import (
 	"time"
 )
 
+// initModels sets the database for each Statping type packages
+func initModels(db database.Database) {
+	core.SetDB(db)
+	services.SetDB(db)
+	hits.SetDB(db)
+	failures.SetDB(db)
+	checkins.SetDB(db)
+	notifications.SetDB(db)
+	incidents.SetDB(db)
+	users.SetDB(db)
+	messages.SetDB(db)
+	groups.SetDB(db)
+}
+
 // Connect will attempt to connect to the sqlite, postgres, or mysql database
 func Connect(configs *DbConfig, retry bool) error {
 	conn := configs.ConnectionString()
@@ -54,6 +68,10 @@ func Connect(configs *DbConfig, retry bool) error {
 		log.Infoln(fmt.Sprintf("Database %s connection was successful.", configs.DbConn))
 	}
 
+	if utils.Params.GetBool("READ_ONLY") {
+		log.Warnln("Running in READ ONLY MODE")
+	}
+
 	configs.Db = dbSession
 
 	initModels(configs.Db)
@@ -61,24 +79,12 @@ func Connect(configs *DbConfig, retry bool) error {
 	return err
 }
 
-func initModels(db database.Database) {
-	core.SetDB(db)
-	services.SetDB(db)
-	hits.SetDB(db)
-	failures.SetDB(db)
-	checkins.SetDB(db)
-	notifications.SetDB(db)
-	incidents.SetDB(db)
-	users.SetDB(db)
-	messages.SetDB(db)
-	groups.SetDB(db)
-}
-
-func CreateAdminUser(c *DbConfig) error {
-	log.Infoln(fmt.Sprintf("Default Admininstrator user does not exist, creating now! (admin/admin)"))
-
+// CreateAdminUser will create the default admin user "admin", "admin", or use the
+// environment variables ADMIN_USER, ADMIN_PASSWORD, and ADMIN_EMAIL if set.
+func CreateAdminUser() error {
 	adminUser := utils.Params.GetString("ADMIN_USER")
 	adminPass := utils.Params.GetString("ADMIN_PASSWORD")
+	adminEmail := utils.Params.GetString("ADMIN_EMAIL")
 
 	if adminUser == "" || adminPass == "" {
 		adminUser = "admin"
@@ -88,7 +94,8 @@ func CreateAdminUser(c *DbConfig) error {
 	admin := &users.User{
 		Username: adminUser,
 		Password: adminPass,
-		Email:    "info@admin.com",
+		Email:    adminEmail,
+		Scopes:   "admin",
 		Admin:    null.NewNullBool(true),
 	}
 
